@@ -46,7 +46,7 @@ function getEmphasisStyle(variant: string | null | undefined) {
     variant === "default"
       ? "var(--primary)"
       : variant === "destructive"
-        ? "var(--destructive)"
+        ? "var(--destructive-strong)"
         : undefined
 
   if (!token) return undefined
