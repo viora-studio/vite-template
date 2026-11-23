@@ -1,5 +1,4 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
-import type { CSSProperties } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
@@ -17,7 +16,7 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
-          "relative overflow-hidden bg-[var(--button-emphasis-bg)] text-destructive-foreground ring-inset ring-1 ring-[var(--button-emphasis-ring)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.16)] focus-visible:ring-[var(--button-emphasis-ring)] active:ring-[var(--button-emphasis-ring)]",
+          "relative overflow-hidden bg-[var(--button-emphasis-bg)] text-white ring-inset ring-1 ring-[var(--button-emphasis-ring)] shadow-xs focus-visible:ring-[var(--button-emphasis-ring)] active:ring-[var(--button-emphasis-ring)]",
         "secondary-destructive":
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
@@ -41,23 +40,12 @@ const buttonVariants = cva(
   }
 )
 
-function getEmphasisStyle(variant: string | null | undefined) {
-  const token =
-    variant === "default"
-      ? "var(--primary)"
-      : variant === "destructive"
-        ? "var(--destructive-strong)"
-        : undefined
-
-  if (!token) return undefined
-
-  return {
-    "--button-emphasis-ring": `color-mix(in oklch, ${token}, black 10%)`,
-    "--button-emphasis-bg": `color-mix(in oklch, ${token}, white 30%)`,
-    "--button-emphasis-gradient-start": `color-mix(in oklch, ${token}, white 15%)`,
-    "--button-emphasis-gradient-end": token,
-  } as CSSProperties & Record<`--${string}`, string>
-}
+const emphasisStyles = {
+  default:
+    "[--button-emphasis-ring:color-mix(in_oklch,var(--primary),black_10%)] [--button-emphasis-bg:color-mix(in_oklch,var(--primary),white_30%)] [--button-emphasis-gradient-start:color-mix(in_oklch,var(--primary),white_15%)] [--button-emphasis-gradient-end:var(--primary)]",
+  destructive:
+    "[--button-emphasis-ring:color-mix(in_oklch,var(--destructive-strong),black_10%)] [--button-emphasis-bg:color-mix(in_oklch,var(--destructive-strong),white_30%)] [--button-emphasis-gradient-start:color-mix(in_oklch,var(--destructive-strong),white_15%)] [--button-emphasis-gradient-end:var(--destructive-strong)]",
+} as const
 
 type ButtonProps = ButtonPrimitive.Props &
   VariantProps<typeof buttonVariants>
@@ -70,19 +58,21 @@ function Button({
   style,
   ...props
 }: ButtonProps) {
-  const hasEmphasisGradient =
-    variant === "default" || variant === "destructive"
+  const emphasisClass =
+    variant != null && variant in emphasisStyles
+      ? emphasisStyles[variant as keyof typeof emphasisStyles]
+      : undefined
 
-  const emphasisStyle = getEmphasisStyle(variant)
+  const hasEmphasisGradient = Boolean(emphasisClass)
 
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      style={{
-        ...(emphasisStyle ?? {}),
-        ...style,
-      }}
+      className={cn(
+        buttonVariants({ variant, size, className }),
+        emphasisClass
+      )}
+      style={style}
       {...props}
     >
       {hasEmphasisGradient ? (
